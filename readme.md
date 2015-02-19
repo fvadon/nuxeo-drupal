@@ -43,7 +43,6 @@ Installation is just done by putting the files at the right place in the install
 
 ### Nuxeo PHP Automation Client
 
-
 Nuxeo PHP Automation client files should be place directly in the module (same level as the .module file). 
 
 The required files are: 
@@ -68,6 +67,8 @@ Nuxeo offers a PHP client that is being used here:
 
 You can see here that it is used to get the title of a document from its ID in `nuxeo_content_field_formatter_view` of nuxeo_content.module.
 
+The formatter view also display a link to the small size of the picture, which requires the user to authenticate to Nuxeo (a proxy to dedicated user would be a better solution)
+
 ## Troubleshooting.
 
 Here are a few hints for issues and question encountered during the implementation of this module
@@ -79,3 +80,8 @@ The edit mode of the field is defined by the hook hook_field_widget_form() where
 [https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7](https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7)
 
 For instance the type (checkbox, text filed...) is the first property to set up, see the example referenced earlier to see how to format the output of the function.
+
+## hook_field_formatter view()
+As explained by the doc, it has to return a renderable array of items, more explanation at:
+
+[https://www.drupal.org/node/930760](https://www.drupal.org/node/930760)
