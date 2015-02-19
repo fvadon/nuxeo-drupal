@@ -22,3 +22,5 @@ target
 *.gpd.*
 *cpJar*
 dependency-tree.log
+NuxeoAutomationAPI.php
+NuxeoAutomationUtilities.php

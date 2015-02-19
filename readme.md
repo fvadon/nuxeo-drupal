@@ -39,6 +39,34 @@ Each hook should return specific information which can is documented in the hook
 Installation is just done by putting the files at the right place in the installation folder of Drupal and reload the module page (as it is just PHP).
 
 
+## REQUIRES AND WARNING
+
+### Nuxeo PHP Automation Client
+
+
+Nuxeo PHP Automation client files should be place directly in the module (same level as the .module file). 
+
+The required files are: 
+
++ NuxeoAutomationUtilities.php
++ NuxeoAutomationAPI.php
+
+And they can be found at: [https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient](https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient)
+
+### Security
+
+**No specific security is done here and the calls are made with Administrator/Administrator on the local server**
+
+### Error handling
+No error handling is done for now.
+
+
+## Nuxeo integration
+
+Nuxeo offers a PHP client that is being used here:
+[http://doc.nuxeo.com/x/HwJu](http://doc.nuxeo.com/x/HwJu)
+
+You can see here that it is used to get the title of a document from its ID in `nuxeo_content_field_formatter_view` of nuxeo_content.module.
 
 ## Troubleshooting.
 

@@ -5,7 +5,7 @@
  *Inspired by field_example module from git://git.drupal.org/project/examples.git
  */
 
-
+require_once('NuxeoAutomationAPI.php');
 
 /**
  * Implements hook_help().
@@ -99,7 +99,8 @@ function nuxeo_content_field_formatter_info() {
 /**
  * Implements hook_field_formatter_view().
  * View mode of the widget.
- * One formatter is implemented, Just a text for now
+ * One formatter is implemented, It gets the title from the ID 
+ * (no control is made on the existence of the document)
  * it should call nuxeo for the pic and then display it...
  * 
  * @see field_example_field_formatter_info()
@@ -110,7 +111,14 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
   switch ($display['type']) {
     // This formatter simply outputs the field as text for now
     case 'nuxeo_content_formatter_text':
-      foreach ($items as $delta => $item) {
+		$client = new NuxeoPhpAutomationClient('http://localhost:8080/nuxeo/site/automation');    
+		$session = $client->getSession('Administrator','Administrator');
+		
+	  foreach ($items as $delta => $item) {
+		  //Call Nuxeo API
+		$answer = $session->newRequest("Document.Fetch")->set('params', 'value', $item['assetid'])->sendRequest();
+		$document=$answer->getDocument(0);
+		$value = sizeof($answer);
         $element[$delta] = array(
           // We create a render array to produce the desired markup,
           // simple text for now.
@@ -120,7 +128,7 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
           '#attributes' => array(
             'style' => 'color:blue',
           ),
-          '#value' => $item['assetid'],
+          '#value' => $document->getTitle(),
         );
       }
       break;
