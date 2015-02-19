@@ -1,0 +1,3 @@
+name = Nuxeo Labs Content
+description = How to integrate Nuxeo content into Drupal
+core = 7.x
