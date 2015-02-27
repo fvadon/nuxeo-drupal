@@ -1,66 +1,69 @@
 <?php
 /**
-*@file
-*Nuxeo labs for Drupal integration by fvadon
-*Inspired by field_example module from git://git.drupal.org/project/examples.git
-*/
-
-require_once('NuxeoAutomationAPI.php');
+ *@file
+ *Nuxeo labs for Drupal integration by fvadon
+ *Inspired by field_example module from git://git.drupal.org/project/examples.git
+ */
+require_once ('NuxeoAutomationAPI.php');
 
 /**
-* Implements hook_help().
-*
-* Displays help and module information.
-*
-* @param path 
-*   Which path of the site we're using to display help
-* @param arg 
-*   Array that holds the current path as returned from arg() function
-*/
+ * Implements hook_help().
+ *
+ * Displays help and module information.
+ *
+ * @param
+ *        	path
+ *        	Which path of the site we're using to display help
+ * @param
+ *        	arg
+ *        	Array that holds the current path as returned from arg() function
+ *        	
+ */
 function nuxeo_content_help($path, $arg) {
 	switch ($path) {
-		case "admin/help#nuxeo_content":
-		return '<p>' . t("Nuxeo content help") . '</p>';
-		break;
+		case "admin/help#nuxeo_content" :
+			return '<p>' . t ( "Nuxeo content help" ) . '</p>';
+			break;
 	}
-} 
+}
 
 /**
-* Implements hook_field_info().
-*
-* Provides the description of the field.
-*/
+ * Implements hook_field_info().
+ *
+ * Provides the description of the field.
+ */
 function nuxeo_content_field_info() {
-	return array(
-		// We name our field as the associative name of the array.
-		'nuxeo_content_assetid' => array(
-			'label' => t('Nuxeo Asset ID'),
-			'description' => t('The id of the asset the picture should be extracted from'),
-			'default_widget' => 'nuxeo_content_widget',
-			'default_formatter' => 'nuxeo_content_formatter_text',
-		),
+	return array (
+			// We name our field as the associative name of the array.
+			'nuxeo_content_assetid' => array (
+					'label' => t ( 'Nuxeo Asset ID' ),
+					'description' => t ( 'The id of the asset the picture should be extracted from' ),
+					'default_widget' => 'nuxeo_content_widget',
+					'default_formatter' => 'nuxeo_content_formatter_text' 
+			) 
 	);
 }
 
 /**
-* Implements hook_field_validate().
-*
-* This hook gives us a chance to validate content that's in our
-* field. We're really only interested in the $items parameter, since
-* it holds arrays representing content in the field we've defined.
-* Here we always validate the field. We could shoud that it looks like a nuxeo ID
-* If the item validates, we do nothing. If it doesn't
-* validate, we add our own error notification to the $errors parameter.
-*
-* @see field_example_field_widget_error()
-*/
+ * Implements hook_field_validate().
+ *
+ * This hook gives us a chance to validate content that's in our
+ * field. We're really only interested in the $items parameter, since
+ * it holds arrays representing content in the field we've defined.
+ * Here we always validate the field. We could shoud that it looks like a nuxeo ID
+ * If the item validates, we do nothing. If it doesn't
+ * validate, we add our own error notification to the $errors parameter.
+ *
+ * @see field_example_field_widget_error()
+ *
+ */
 function nuxeo_content_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
-	foreach ($items as $delta => $item) {
-		if (!empty($item['assetid'])) {
-			if (!preg_match('/[[:alnum:]]/', $item['assetid'])) {
-				$errors[$field['field_name']][$langcode][$delta][] = array(
-					'error' => 'field_example_invalid',
-					'message' => t('Should be the Asset ID'),
+	foreach ( $items as $delta => $item ) {
+		if (! empty ( $item ['assetid'] )) {
+			if (! preg_match ( '/[[:alnum:]]/', $item ['assetid'] )) {
+				$errors [$field ['field_name']] [$langcode] [$delta] [] = array (
+						'error' => 'field_example_invalid',
+						'message' => t ( 'Should be the Asset ID' ) 
 				);
 			}
 		}
@@ -68,134 +71,236 @@ function nuxeo_content_field_validate($entity_type, $entity, $field, $instance, 
 }
 
 /**
-* Implements hook_field_is_empty().
-*
-* hook_field_is_emtpy() is where Drupal asks us if this field is empty.
-* Return TRUE if it does not contain data, FALSE if it does. This lets
-* the form API flag an error when required fields are empty.
-*/
+ * Implements hook_field_is_empty().
+ *
+ * hook_field_is_emtpy() is where Drupal asks us if this field is empty.
+ * Return TRUE if it does not contain data, FALSE if it does. This lets
+ * the form API flag an error when required fields are empty.
+ */
 function nuxeo_content_field_is_empty($item, $field) {
-	return empty($item['assetid']);
+	return empty ( $item ['assetid'] );
 }
 
 /**
-* Implements hook_field_formatter_info().
-*
-* We need to tell Drupal that we have only one formatter
-* For now we store the ID manually, we should provide a better way to look
-* for the asset ID ( API calls, Iframe...)
-* Info of the view mode
-* @see nuxeo_content_field_formatter_view()
-*/
+ * Implements hook_field_formatter_info().
+ *
+ * We need to tell Drupal that we have only one formatter
+ * For now we store the ID manually, we should provide a better way to look
+ * for the asset ID ( API calls, Iframe...)
+ * Info of the view mode
+ *
+ * @see nuxeo_content_field_formatter_view()
+ *
+ */
 function nuxeo_content_field_formatter_info() {
-	return array(
-		'nuxeo_content_formatter_text' => array(
-			'label' => t('Simple text-based formatter'),
-			'field types' => array('nuxeo_content_assetid'),
-		)
+	return array (
+			'nuxeo_content_formatter_text' => array (
+					'label' => t ( 'Simple text-based formatter' ),
+					'field types' => array (
+							'nuxeo_content_assetid' 
+					) 
+			) 
 	);
 }
 
 /**
-* Implements hook_field_formatter_view().
-* View mode of the widget.
-* One formatter is implemented, It gets the title from the ID 
-* and it also create the direct link to the image on Nuxeo server 
-* which means you have to authenticate to Nuxeo in parallel for now 
-* (a proxy would be a better solution)
-* 
-* 
-* @see field_example_field_formatter_info()
-*/
+ * Implements hook_field_formatter_view().
+ * View mode of the widget.
+ * One formatter is implemented, It gets the title from the ID
+ * and it also create the direct link to the image on Nuxeo server
+ * which means you have to authenticate to Nuxeo in parallel for now
+ * (a proxy would be a better solution)
+ *
+ *
+ * @see field_example_field_formatter_info()
+ *
+ */
 function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-	$element = array();
-
-	switch ($display['type']) {
+	$element = array ();
+	
+	switch ($display ['type']) {
 		// This formatter simply outputs the field as text for now
-		case 'nuxeo_content_formatter_text':
-			$nuxeoServer='http://localhost:8080/nuxeo/';
-			$pictureUrlExtension='nxpicsfile/default/';
-			$smallSize='/Small:content/';
-			$client = new NuxeoPhpAutomationClient($nuxeoServer.'site/automation');    
-			$session = $client->getSession('Administrator','Administrator');
-		
-			foreach ($items as $delta => $item) {
-				//Call Nuxeo API
-				$answer = $session->newRequest("Document.Fetch")->set('params', 'value', $item['assetid'])->sendRequest();
-				$document=$answer->getDocument(0);
-				$value = sizeof($answer);
-				$docTitle= $document->getTitle();
+		case 'nuxeo_content_formatter_text' :
+			$nuxeoServer = 'http://localhost:8080/nuxeo/';
+			$pictureUrlExtension = 'nxpicsfile/default/';
+			$smallSize = '/Small:content/';
+			$searchframeURL = 'site/searchframe';
+			/* global $nuxeoServer, $pictureUrlExtension,$smallSize,$searchframeURL; */
+			$client = new NuxeoPhpAutomationClient ( $nuxeoServer . 'site/automation' );
+			$session = $client->getSession ( 'Administrator', 'Administrator' );
+			
+			foreach ( $items as $delta => $item ) {
+				// Call Nuxeo API
+				$answer = $session->newRequest ( "Document.Fetch" )->set ( 'params', 'value', $item ['assetid'] )->sendRequest ();
+				$document = $answer->getDocument ( 0 );
+				$value = sizeof ( $answer );
+				$docTitle = $document->getTitle ();
 				
-				$element[$delta] = array(
-					array(
-						// We create a render array to produce the desired markup,
-						// simple text for now.
-						// See theme_html_tag().
-						'#type' => 'html_tag',
-						'#tag' => 'p',
-						'#value' => 'Nuxeo Asset Title'.$docTitle
-					),
-					array(
-						// We create a render array to produce the desired markup,
-						// Link to the image URL on Nuxeo
-						// See theme_html_tag().
-						'#type' => 'html_tag',
-						'#tag' => 'img',
-						'#attributes' => array(
-							'src' => $nuxeoServer.$pictureUrlExtension.$item['assetid'].$smallSize
-						)
-					)
+				$element [$delta] = array (
+						array (
+								// We create a render array to produce the desired markup,
+								// simple text for now.
+								// See theme_html_tag().
+								'#type' => 'html_tag',
+								'#tag' => 'p',
+								'#value' => 'Nuxeo Asset Title: ' . $docTitle 
+						),
+						array (
+								// We create a render array to produce the desired markup,
+								// Link to the image URL on Nuxeo
+								// See theme_html_tag().
+								'#type' => 'html_tag',
+								'#tag' => 'img',
+								'#attributes' => array (
+										'src' => $nuxeoServer . $pictureUrlExtension . $item ['assetid'] . $smallSize 
+								) 
+						) 
 				);
-					
-		
 			}
 			break;
-		}
-		return $element;
 	}
+	return $element;
+}
 
-	/**
-	* Implements hook_field_widget_info().
-	* Info of the edit mode
-	*
-	* @see nuxeo_content_field_widget_form()
-	*/
-	function nuxeo_content_field_widget_info() {
-		return array(
-			'nuxeo_content_text_widget' => array(
-				'label' => t('Asset ID'),
-				'field types' => array('nuxeo_content_assetid'),
+/**
+ * Implements hook_field_widget_info().
+ * Info of the edit mode
+ *
+ * @see nuxeo_content_field_widget_form()
+ */
+function nuxeo_content_field_widget_info() {
+	return array (
+			'nuxeo_content_text_widget' => array (
+					'label' => t ( 'Asset ID' ),
+					'field types' => array (
+							'nuxeo_content_assetid' 
+					) 
 			),
-		);
+			'nuxeo_content_iframe_widget' => array (
+					'label' => t ( 'Iframe Asset ID' ),
+					'field types' => array (
+							'nuxeo_content_assetid' 
+					) 
+			) 
+	);
+}
+
+/**
+ * Implements hook_field_widget_form().
+ * Edit Mode
+ * hook_widget_form() is where Drupal tells us to create form elements for
+ * our field's widget.
+ *
+ * The form API reference can be found at;
+ * https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7
+ */
+function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+	/* global $nuxeoServer, $pictureUrlExtension,$smallSize,$searchframeURL; */
+	$nuxeoServer = 'http://localhost:8080/nuxeo/';
+	$pictureUrlExtension = 'nxpicsfile/default/';
+	$smallSize = '/Small:content/';
+	$searchframeURL = 'site/searchframe';
+	$value = isset ( $items [$delta] ['assetid'] ) ? $items [$delta] ['assetid'] : '';
+	
+	$widget = $element;
+	$widget ['#delta'] = $delta;
+	
+	switch ($instance ['widget'] ['type']) {
+		case 'nuxeo_content_text_widget' :
+			$widget += array (
+					'#type' => 'textfield',
+					'#default_value' => $value,
+					// Allow a slightly larger size that the field length to allow for some
+					// configurations where all characters won't fit in input field.
+					'#size' => 100,
+					'#maxlength' => 2083 
+			);
+			break;
+		case 'nuxeo_content_iframe_widget' :
+			$widget += array (
+					'#type' => 'nuxeo_asset_iframe_element',
+					'#default_value' => $value,
+			);
+			break;
 	}
+	$element ['assetid'] = $widget;
+	return $element;
+}
 
-	/**
-	* Implements hook_field_widget_form().
-	* Edit Mode
-	* hook_widget_form() is where Drupal tells us to create form elements for
-	* our field's widget.
-	*
-	* The form API reference can be found at; 
-	* https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7
-	*/
-	function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-		$value = isset($items[$delta]['assetid']) ? $items[$delta]['assetid'] : '';
+/**
+ * Implements hook_element_info() based on the textfiled element info declaration.
+ * https://www.drupal.org/node/169815
+ * Using http://nodesforbreakfast.com/article/2012/02/24/create-custom-form-api-elements-hookelementinfo-drupal-7 and
+ * https://www.silviogutierrez.com/blog/custom-drupal-elements-forms/ as an example
+ */
+function nuxeo_content_element_info(){
+	$types ['nuxeo_asset_iframe_element'] = array(
+			'#input' => TRUE,
+			'#autocomplete_path' => FALSE,
+			'#process' => array(
+					'ajax_process_form' 
+			),
+			'#theme' => 'nuxeo_asset_iframe_element',
+			'#theme_wrappers' => array('form_element'),
+	);
+	return $types;
+}
 
-		$widget = $element;
-		$widget['#delta'] = $delta;
+/**
+ * Format a nuxeo_asset_iframe_element
+ *
+ * Inspired from theme_fieldtext()
+ */
+function theme_nuxeo_asset_iframe_element($variables) {
+	$element = $variables['element'];
+	  $element['#attributes']['type'] = 'text';
+	  element_set_attributes($element, array('id', 'name', 'value', 'size', 'maxlength'));
+	  _form_set_class($element, array('form-text'));
+
+	  $extra = '';
+	  if ($element['#autocomplete_path'] && drupal_valid_path($element['#autocomplete_path'])) {
+	    drupal_add_library('system', 'drupal.autocomplete');
+	    $element['#attributes']['class'][] = 'form-autocomplete';
+
+	    $attributes = array();
+	    $attributes['type'] = 'hidden';
+	    $attributes['id'] = $element['#attributes']['id'] . '-autocomplete';
+	    $attributes['value'] = url($element['#autocomplete_path'], array('absolute' => TRUE));
+	    $attributes['disabled'] = 'disabled';
+	    $attributes['class'][] = 'autocomplete';
+	    $extra = '<input' . drupal_attributes($attributes) . ' />';
+	  }
+
+	  $output = '<input' . drupal_attributes($element['#attributes']) . ' /></br>'
+	  .'<iframe src="http://localhost:8080/nuxeo/site/searchframe" width="400" height="400"><p>Your browser does not support iframes.</p></iframe><script>
+        console.log("parentrReady");
+		window.addEventListener( "message",
+          function (e) {
+			  	console.log("messageReceivedFromChild");
+                console.log(e.data);
+          });
+		  function postToSelf(){
+		  	console.log("postFromSelf");
+		  	top.postMessage("hello", "*");
+		  }
+    </script>	<button onclick="postToSelf()">Post</button>-->
+';
+
+	
+	
+	return $output . $extra;
+}
 
 
-		$widget += array(
-			'#type' => 'textfield',
-			'#default_value' => $value,
-			// Allow a slightly larger size that the field length to allow for some
-			// configurations where all characters won't fit in input field.
-			'#size' => 100,
-			'#maxlength' => 2083,
-		);
+function nuxeo_asset_theme() {
+	print("testtsetstsetsetsetsetes");
+	return array (
+			'nuxeo_asset_iframe_element' => array(
+					'render element' => 'element',
+			) ,
+	);
+}
 
 
-		$element['assetid'] = $widget;
-		return $element;
-	}
 
+	

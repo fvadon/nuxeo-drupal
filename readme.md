@@ -73,6 +73,11 @@ The formatter view also display a link to the small size of the picture, which r
 
 Here are a few hints for issues and question encountered during the implementation of this module
 
+### Implementing new hooks
+
+In order for your new hooks to be loaded, you need to reload the module in the module page.
+Once it is done you can modify that hook and reload just by saving the file and reloading the current page in Drupal, but you need to the full module she you implement new hooks...
+
 ### widget_form()
 
 The edit mode of the field is defined by the hook hook_field_widget_form() where Drupal tells us to create form elements for our field's widget. It means that it should return and element containing form properties. The list of available for properties can be found at:
@@ -85,3 +90,4 @@ For instance the type (checkbox, text filed...) is the first property to set up,
 As explained by the doc, it has to return a renderable array of items, more explanation at:
 
 [https://www.drupal.org/node/930760](https://www.drupal.org/node/930760)
+
