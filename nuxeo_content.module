@@ -270,20 +270,21 @@ function theme_nuxeo_asset_iframe_element($variables) {
 	    $attributes['class'][] = 'autocomplete';
 	    $extra = '<input' . drupal_attributes($attributes) . ' />';
 	  }
-
-	  $output = '<input' . drupal_attributes($element['#attributes']) . ' /></br>'
-	  .'<iframe src="http://localhost:8080/nuxeo/site/searchframe" width="400" height="400"><p>Your browser does not support iframes.</p></iframe><script>
-        console.log("parentrReady");
+  		$nuxeoServer = 'http://localhost:8080/nuxeo/';
+		$searchframeURL = 'site/searchframe';
+	  	$output = '<input' . drupal_attributes($element['#attributes']) . ' style="display: none;"/></br>'
+	  .'<iframe src="'.$nuxeoServer.$searchframeURL.'" width="400" height="400" id="'.$element['#attributes']['id'].'-iframe"><p>Your browser does not support iframes.</p></iframe><script>
 		window.addEventListener( "message",
           function (e) {
-			  	console.log("messageReceivedFromChild");
-                console.log(e.data);
+			  if (e.origin !== "'.$nuxeoServer.'"){
+				  document.getElementById("'.$element['#attributes']['id'].'").value = e.data;
+			  }	
           });
-		  function postToSelf(){
-		  	console.log("postFromSelf");
-		  	top.postMessage("hello", "*");
-		  }
-    </script>	<button onclick="postToSelf()">Post</button>-->
+		  var nuxeosearchframe = document.getElementById("'.$element['#attributes']['id'].'-iframe");
+		  nuxeosearchframe.onload = function() {
+		  nuxeosearchframe.contentWindow.postMessage("'.$element['#attributes']['value'].'","*");
+		  }		  
+    	  </script>
 ';
 
 	
