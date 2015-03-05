@@ -39,7 +39,8 @@ function nuxeo_content_field_info() {
 					'label' => t ( 'Nuxeo Asset ID' ),
 					'description' => t ( 'The id of the asset the picture should be extracted from' ),
 					'default_widget' => 'nuxeo_content_widget',
-					'default_formatter' => 'nuxeo_content_formatter_text' 
+					'default_formatter' => 'nuxeo_content_formatter_text',
+					'settings' => array('nuxeo_server_url' => 'http://localhost:8080/nuxeo/', 'nuxeo_user'=>'Administrator', 'nuxeo_password'=>'Administrator'),
 			) 
 	);
 }
@@ -121,21 +122,19 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 	switch ($display ['type']) {
 		// This formatter simply outputs the field as text for now
 		case 'nuxeo_content_formatter_text' :
-			$nuxeoServer = 'http://localhost:8080/nuxeo/';
+			$nuxeoServer = $field['settings']['nuxeo_server_url'];
 			$pictureUrlExtension = 'nxpicsfile/default/';
 			$smallSize = '/Small:content/';
 			$searchframeURL = 'site/searchframe';
 			/* global $nuxeoServer, $pictureUrlExtension,$smallSize,$searchframeURL; */
 			$client = new NuxeoPhpAutomationClient ( $nuxeoServer . 'site/automation' );
-			$session = $client->getSession ( 'Administrator', 'Administrator' );
-			
+			$session = $client->getSession ( $field['settings']['nuxeo_user'], $field['settings']['nuxeo_password'] );
 			foreach ( $items as $delta => $item ) {
 				// Call Nuxeo API
 				$answer = $session->newRequest ( "Document.Fetch" )->set ( 'params', 'value', $item ['assetid'] )->sendRequest ();
 				$document = $answer->getDocument ( 0 );
 				$value = sizeof ( $answer );
-				$docTitle = $document->getTitle ();
-				
+				$docTitle = $document->getTitle ();				
 				$element [$delta] = array (
 						array (
 								// We create a render array to produce the desired markup,
@@ -143,7 +142,7 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 								// See theme_html_tag().
 								'#type' => 'html_tag',
 								'#tag' => 'p',
-								'#value' => 'Nuxeo Asset Title: ' . $docTitle 
+								'#value' => $docTitle, 
 						),
 						array (
 								// We create a render array to produce the desired markup,
@@ -196,7 +195,7 @@ function nuxeo_content_field_widget_info() {
  */
 function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
 	/* global $nuxeoServer, $pictureUrlExtension,$smallSize,$searchframeURL; */
-	$nuxeoServer = 'http://localhost:8080/nuxeo/';
+	$nuxeoServer = $field['settings']['nuxeo_server_url'];
 	$pictureUrlExtension = 'nxpicsfile/default/';
 	$smallSize = '/Small:content/';
 	$searchframeURL = 'site/searchframe';
@@ -220,6 +219,7 @@ function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance
 			$widget += array (
 					'#type' => 'nuxeo_asset_iframe_element',
 					'#default_value' => $value,
+					'#nuxeo_server_url'=> $field['settings']['nuxeo_server_url'],
 			);
 			break;
 	}
@@ -270,10 +270,11 @@ function theme_nuxeo_asset_iframe_element($variables) {
 	    $attributes['class'][] = 'autocomplete';
 	    $extra = '<input' . drupal_attributes($attributes) . ' />';
 	  }
-  		$nuxeoServer = 'http://localhost:8080/nuxeo/';
+
+	  	$nuxeoServer = $element['#nuxeo_server_url'];
 		$searchframeURL = 'site/searchframe';
 	  	$output = '<input' . drupal_attributes($element['#attributes']) . ' style="display: none;"/></br>'
-	  .'<iframe src="'.$nuxeoServer.$searchframeURL.'" width="400" height="400" id="'.$element['#attributes']['id'].'-iframe"><p>Your browser does not support iframes.</p></iframe><script>
+	  .'<iframe src="'.$nuxeoServer.$searchframeURL.'" width="800" height="300" id="'.$element['#attributes']['id'].'-iframe"><p>Your browser does not support iframes.</p></iframe><script>
 		window.addEventListener( "message",
           function (e) {
 			  if (e.origin !== "'.$nuxeoServer.'"){
@@ -284,17 +285,12 @@ function theme_nuxeo_asset_iframe_element($variables) {
 		  nuxeosearchframe.onload = function() {
 		  nuxeosearchframe.contentWindow.postMessage("'.$element['#attributes']['value'].'","*");
 		  }		  
-    	  </script>
-';
-
-	
-	
+    	  </script>';
 	return $output . $extra;
 }
 
 
 function nuxeo_asset_theme() {
-	print("testtsetstsetsetsetsetes");
 	return array (
 			'nuxeo_asset_iframe_element' => array(
 					'render element' => 'element',
@@ -302,6 +298,33 @@ function nuxeo_asset_theme() {
 	);
 }
 
+function nuxeo_content_field_settings_form($field, $instance) {
+	$widget = $instance['widget'];
+	$settings = $widget['settings'];
 
+	if ($widget['type'] == 'nuxeo_content_text_widget' || $widget['type'] == 'nuxeo_content_iframe_widget' ) {
+		$form['nuxeo_server_url'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Nuxeo Server URL'),
+				'#default_value' => $field['settings']['nuxeo_server_url'],
+				'#required' => TRUE,
+		);
+		$form['nuxeo_user'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Nuxeo User'),
+				'#default_value' => $field['settings']['nuxeo_user'],
+				'#required' => TRUE,
+		);
+		$form['nuxeo_password'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Nuxeo User Password'),
+				'#default_value' => $field['settings']['nuxeo_password'],
+				'#required' => TRUE,
+		);
+
+	}
+
+	return $form;
+}
 
 	
