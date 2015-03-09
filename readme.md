@@ -2,12 +2,26 @@
 
 The goal of this project is to explain how Nuxeo can be integrated into Drupal.
 The idea is to create a new field into nodes likes Articles to select and display Nuxeo Content.
-This is an ongoing work.
+This can also be seen as the what is needed in Drupal 7 to set up a custom field.
 
+## Nuxeo integration
+
+Nuxeo offers a PHP client that is being described here:
+[http://doc.nuxeo.com/x/HwJu](http://doc.nuxeo.com/x/HwJu)
+
+You can see here that it is used to get the title of a document from its ID in `nuxeo_content_field_formatter_view` of nuxeo_content.module.
+
+The formatter view also display a link to the small size of the picture, which requires the user to authenticate to Nuxeo (a proxy to dedicated user would be a better solution).
+
+**The search part of the module in edit mode is handled by a plugin that needs to be installed Nuxeo side:
+**
+[https://github.com/fvadon/nuxeo-simplesearchframe](https://github.com/fvadon/nuxeo-simplesearchframe)
+
+It is displayed in Drupal through an Iframe, and communication between the 2 parties is made trough post messages.
 
 ## General logic of Drupal
 
-This part aims at explaining a few hints of the Drupal logic. It does not replace exploring Drupal documentation but can be starting point.
+This part aims at explaining a few hints of the Drupal logic. It does not replace exploring Drupal documentation but can be a starting point.
 Drupal custom dev are called modules. In Drupal you have several kind of objects called "nodes". IT can be blocks, menues, fields...
 
 A module is composed of a few files:
@@ -38,36 +52,26 @@ Each hook should return specific information which can is documented in the hook
 	
 Installation is just done by putting the files at the right place in the installation folder of Drupal and reload the module page (as it is just PHP).
 
+A custom widget element is also defined.
 
-## REQUIRES AND WARNING
+
+## Installation and requires
+
+## Installation
+
+As any drupal module, you can just put all the files in the sites/all/modules folder of your drupal installation.
+It will create a new field type available for your different content types.
 
 ### Nuxeo PHP Automation Client
 
-Nuxeo PHP Automation client files should be place directly in the module (same level as the .module file). 
+Nuxeo PHP Automation client files are included in the module, taken from:
 
-The required files are: 
-
-+ NuxeoAutomationUtilities.php
-+ NuxeoAutomationAPI.php
-
-And they can be found at: [https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient](https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient)
-
-### Security
-
-**No specific security is done here and the calls are made with Administrator/Administrator on the local server**
-
-### Error handling
-No error handling is done for now.
+[https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient](https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient)
 
 
-## Nuxeo integration
+### Nuxeo Simplesearchframe
+As described above, a plugin needs to be installed on the Nuxeo server.
 
-Nuxeo offers a PHP client that is being used here:
-[http://doc.nuxeo.com/x/HwJu](http://doc.nuxeo.com/x/HwJu)
-
-You can see here that it is used to get the title of a document from its ID in `nuxeo_content_field_formatter_view` of nuxeo_content.module.
-
-The formatter view also display a link to the small size of the picture, which requires the user to authenticate to Nuxeo (a proxy to dedicated user would be a better solution)
 
 ## Troubleshooting.
 

@@ -189,7 +189,7 @@ function nuxeo_content_field_widget_info() {
  * Edit Mode
  * hook_widget_form() is where Drupal tells us to create form elements for
  * our field's widget.
- *
+ * In our case we use a custom element type defined after
  * The form API reference can be found at;
  * https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7
  */
@@ -228,8 +228,9 @@ function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance
 }
 
 /**
- * Implements hook_element_info() based on the textfiled element info declaration.
+ * Implements hook_element_info() based on the textfield element info declaration.
  * https://www.drupal.org/node/169815
+ * This hook is the description of the custom element where we declare that a custom theme function will be used to format it
  * Using http://nodesforbreakfast.com/article/2012/02/24/create-custom-form-api-elements-hookelementinfo-drupal-7 and
  * https://www.silviogutierrez.com/blog/custom-drupal-elements-forms/ as an example
  */
@@ -247,8 +248,20 @@ function nuxeo_content_element_info(){
 }
 
 /**
+ * Theme hook to declare our custom formatter for the custom element
+ */
+
+function nuxeo_asset_theme() {
+	return array (
+			'nuxeo_asset_iframe_element' => array(
+					'render element' => 'element',
+			) ,
+	);
+}
+
+/**
  * Format a nuxeo_asset_iframe_element
- *
+ * This theme function generates the actual HTML for the custom element 
  * Inspired from theme_fieldtext()
  */
 function theme_nuxeo_asset_iframe_element($variables) {
@@ -258,18 +271,6 @@ function theme_nuxeo_asset_iframe_element($variables) {
 	  _form_set_class($element, array('form-text'));
 
 	  $extra = '';
-	  if ($element['#autocomplete_path'] && drupal_valid_path($element['#autocomplete_path'])) {
-	    drupal_add_library('system', 'drupal.autocomplete');
-	    $element['#attributes']['class'][] = 'form-autocomplete';
-
-	    $attributes = array();
-	    $attributes['type'] = 'hidden';
-	    $attributes['id'] = $element['#attributes']['id'] . '-autocomplete';
-	    $attributes['value'] = url($element['#autocomplete_path'], array('absolute' => TRUE));
-	    $attributes['disabled'] = 'disabled';
-	    $attributes['class'][] = 'autocomplete';
-	    $extra = '<input' . drupal_attributes($attributes) . ' />';
-	  }
 
 	  	$nuxeoServer = $element['#nuxeo_server_url'];
 		$searchframeURL = 'site/searchframe';
@@ -290,13 +291,9 @@ function theme_nuxeo_asset_iframe_element($variables) {
 }
 
 
-function nuxeo_asset_theme() {
-	return array (
-			'nuxeo_asset_iframe_element' => array(
-					'render element' => 'element',
-			) ,
-	);
-}
+/**
+ * Implements hook_field_settings_form() to set up the field parameters form.
+ */
 
 function nuxeo_content_field_settings_form($field, $instance) {
 	$widget = $instance['widget'];
