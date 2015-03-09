@@ -1,6 +1,6 @@
 # Integrating Nuxeo and Drupal
 
-The goal of this project is to explain how Nuxeo can be integrated into Drupal.
+The goal of this project is to explain how Nuxeo can be integrated into Drupal 7.
 The idea is to create a new field into nodes likes Articles to select and display Nuxeo Content.
 This can also be seen as the what is needed in Drupal 7 to set up a custom field.
 
@@ -13,8 +13,8 @@ You can see here that it is used to get the title of a document from its ID in `
 
 The formatter view also display a link to the small size of the picture, which requires the user to authenticate to Nuxeo (a proxy to dedicated user would be a better solution).
 
-**The search part of the module in edit mode is handled by a plugin that needs to be installed Nuxeo side:
-**
+**The search part of the module in edit mode is handled by a plugin that needs to be installed Nuxeo side:**
+
 [https://github.com/fvadon/nuxeo-simplesearchframe](https://github.com/fvadon/nuxeo-simplesearchframe)
 
 It is displayed in Drupal through an Iframe, and communication between the 2 parties is made trough post messages.
