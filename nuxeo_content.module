@@ -40,8 +40,9 @@ function nuxeo_content_field_info() {
 					'description' => t ( 'The id of the asset the picture should be extracted from' ),
 					'default_widget' => 'nuxeo_content_widget',
 					'default_formatter' => 'nuxeo_content_formatter_text',
-					'settings' => array('nuxeo_server_url' => 'http://localhost:8080/nuxeo/', 'nuxeo_user'=>'Administrator', 'nuxeo_password'=>'Administrator'),
-			) 
+					'instance_settings' => array('nuxeo_server_url' => 'http://localhost:8080/nuxeo/', 'nuxeo_pic_size' => 'Small'),
+					),
+			
 	);
 }
 
@@ -63,11 +64,11 @@ function nuxeo_content_field_validate($entity_type, $entity, $field, $instance, 
 		if (! empty ( $item ['assetid'] )) {
 			if (! preg_match ( '/[[:alnum:]]/', $item ['assetid'] )) {
 				$errors [$field ['field_name']] [$langcode] [$delta] [] = array (
-						'error' => 'field_example_invalid',
+						'error' => 'nuxeo_example_invalid',
 						'message' => t ( 'Should be the Asset ID' ) 
 				);
 			}
-		}
+		}	
 	}
 }
 
@@ -122,28 +123,27 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 	switch ($display ['type']) {
 		// This formatter simply outputs the field as text for now
 		case 'nuxeo_content_formatter_text' :
-			$nuxeoServer = $field['settings']['nuxeo_server_url'];
+			$nuxeoServer = $instance['settings']['nuxeo_server_url'];
+			$nuxeo_pic_size = $instance['settings']['nuxeo_pic_size'];			
 			$pictureUrlExtension = 'nxpicsfile/default/';
-			$smallSize = '/Small:content/';
 			$searchframeURL = 'site/searchframe';
-			/* global $nuxeoServer, $pictureUrlExtension,$smallSize,$searchframeURL; */
 			$client = new NuxeoPhpAutomationClient ( $nuxeoServer . 'site/automation' );
-			$session = $client->getSession ( $field['settings']['nuxeo_user'], $field['settings']['nuxeo_password'] );
+			// $session = $client->getSession ( 'Administrator','Administrator'); Here as an exemple when the use of the Rest Apis is needed.
 			foreach ( $items as $delta => $item ) {
-				// Call Nuxeo API
-				$answer = $session->newRequest ( "Document.Fetch" )->set ( 'params', 'value', $item ['assetid'] )->sendRequest ();
+				// Call Nuxeo API Example
+				/*$answer = $session->newRequest ( "Document.Fetch" )->set ( 'params', 'value', $item ['assetid'] )->sendRequest ();
 				$document = $answer->getDocument ( 0 );
 				$value = sizeof ( $answer );
-				$docTitle = $document->getTitle ();				
+				$docTitle = $document->getTitle ();	*/			
 				$element [$delta] = array (
-						array (
+						/*array (
 								// We create a render array to produce the desired markup,
 								// simple text for now.
 								// See theme_html_tag().
 								'#type' => 'html_tag',
 								'#tag' => 'p',
 								'#value' => $docTitle, 
-						),
+						),*/
 						array (
 								// We create a render array to produce the desired markup,
 								// Link to the image URL on Nuxeo
@@ -151,7 +151,7 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 								'#type' => 'html_tag',
 								'#tag' => 'img',
 								'#attributes' => array (
-										'src' => $nuxeoServer . $pictureUrlExtension . $item ['assetid'] . $smallSize 
+										'src' => $nuxeoServer . $pictureUrlExtension . $item ['assetid'] . '/'.$nuxeo_pic_size.':content/', 
 								) 
 						) 
 				);
@@ -194,10 +194,8 @@ function nuxeo_content_field_widget_info() {
  * https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7
  */
 function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-	/* global $nuxeoServer, $pictureUrlExtension,$smallSize,$searchframeURL; */
 	$nuxeoServer = $field['settings']['nuxeo_server_url'];
 	$pictureUrlExtension = 'nxpicsfile/default/';
-	$smallSize = '/Small:content/';
 	$searchframeURL = 'site/searchframe';
 	$value = isset ( $items [$delta] ['assetid'] ) ? $items [$delta] ['assetid'] : '';
 	
@@ -291,37 +289,33 @@ function theme_nuxeo_asset_iframe_element($variables) {
 }
 
 
+
 /**
- * Implements hook_field_settings_form() to set up the field parameters form.
+ * Implements hook_field_instance_settings_form().
  */
-
-function nuxeo_content_field_settings_form($field, $instance) {
-	$widget = $instance['widget'];
-	$settings = $widget['settings'];
-
-	if ($widget['type'] == 'nuxeo_content_text_widget' || $widget['type'] == 'nuxeo_content_iframe_widget' ) {
+function nuxeo_content_field_instance_settings_form($field, $instance) {
+	$settings = $instance['settings'];
 		$form['nuxeo_server_url'] = array(
 				'#type' => 'textfield',
 				'#title' => t('Nuxeo Server URL'),
 				'#default_value' => $field['settings']['nuxeo_server_url'],
 				'#required' => TRUE,
 		);
-		$form['nuxeo_user'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Nuxeo User'),
-				'#default_value' => $field['settings']['nuxeo_user'],
-				'#required' => TRUE,
-		);
-		$form['nuxeo_password'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Nuxeo User Password'),
-				'#default_value' => $field['settings']['nuxeo_password'],
-				'#required' => TRUE,
-		);
 
-	}
+		$form['nuxeo_pic_size'] = array(
+				'#type' => 'select',
+				'#title' => t('Image Format'),
+				'#default_value' => $settings['nuxeo_pic_size'],
+				'#options' => array(
+						'Thumb' => t('Thumb'),
+						'Small' => t('Small'),
+						'Medium' => t('Medium'),
+				),
+				'#required' => TRUE,
+				'#description' => t('The size of the pic to display'),
+		);
+	
 
 	return $form;
 }
-
 	
