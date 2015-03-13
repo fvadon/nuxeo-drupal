@@ -269,20 +269,21 @@ function theme_nuxeo_asset_iframe_element($variables) {
 	  _form_set_class($element, array('form-text'));
 
 	  $extra = '';
-
 	  	$nuxeoServer = $element['#nuxeo_server_url'];
 		$searchframeURL = 'site/searchframe';
+		$elementminid=str_replace("-","",$element['#attributes']['id']);
 	  	$output = '<input' . drupal_attributes($element['#attributes']) . ' style="display: none;"/></br>'
 	  .'<iframe src="'.$nuxeoServer.$searchframeURL.'" width="800" height="300" id="'.$element['#attributes']['id'].'-iframe"><p>Your browser does not support iframes.</p></iframe><script>
 		window.addEventListener( "message",
           function (e) {
-			  if (e.origin !== "'.$nuxeoServer.'"){
-				  document.getElementById("'.$element['#attributes']['id'].'").value = e.data;
+			  if (e.origin+"/nuxeo/" == "'.$nuxeoServer.'" && e.data.parentId=="'.$elementminid.'"){
+				  document.getElementById("'.$element['#attributes']['id'].'").value = e.data.documentId;
 			  }	
           });
-		  var nuxeosearchframe = document.getElementById("'.$element['#attributes']['id'].'-iframe");
-		  nuxeosearchframe.onload = function() {
-		  nuxeosearchframe.contentWindow.postMessage("'.$element['#attributes']['value'].'","*");
+		  var nuxeoSearchFrame'.$elementminid.' = document.getElementById("'.$element['#attributes']['id'].'-iframe");
+		  var messageToSend'.$elementminid.' = {parentId:"'.$elementminid.'", message:"'.$element['#attributes']['value'].'"};
+		  nuxeoSearchFrame'.$elementminid.'.onload = function() {
+		  nuxeoSearchFrame'.$elementminid.'.contentWindow.postMessage(messageToSend'.$elementminid.',"*");
 		  }		  
     	  </script>';
 	return $output . $extra;
