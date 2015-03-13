@@ -194,7 +194,7 @@ function nuxeo_content_field_widget_info() {
  * https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7
  */
 function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-	$nuxeoServer = $field['settings']['nuxeo_server_url'];
+	$nuxeoServer = $instance['settings']['nuxeo_server_url'];
 	$pictureUrlExtension = 'nxpicsfile/default/';
 	$searchframeURL = 'site/searchframe';
 	$value = isset ( $items [$delta] ['assetid'] ) ? $items [$delta] ['assetid'] : '';
@@ -217,7 +217,7 @@ function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance
 			$widget += array (
 					'#type' => 'nuxeo_asset_iframe_element',
 					'#default_value' => $value,
-					'#nuxeo_server_url'=> $field['settings']['nuxeo_server_url'],
+					'#nuxeo_server_url'=> $nuxeoServer,
 			);
 			break;
 	}
@@ -298,7 +298,7 @@ function nuxeo_content_field_instance_settings_form($field, $instance) {
 		$form['nuxeo_server_url'] = array(
 				'#type' => 'textfield',
 				'#title' => t('Nuxeo Server URL'),
-				'#default_value' => $field['settings']['nuxeo_server_url'],
+				'#default_value' => $instance['settings']['nuxeo_server_url'],
 				'#required' => TRUE,
 		);
 
