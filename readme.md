@@ -1,28 +1,44 @@
 # Integrating Nuxeo and Drupal
 
-The goal of this project is to explain how Nuxeo can be integrated into Drupal 7.
+The goal of this project is to explain how Nuxeo can be integrated with Drupal 7.
 The idea is to create a new field into nodes likes Articles to select and display Nuxeo Content.
-This can also be seen as the what is needed in Drupal 7 to set up a custom field.
+This can also be seen as what is needed in Drupal 7 to set up a custom field.
 
-## Nuxeo integration
+## Installation and requires
 
-Nuxeo offers a PHP client that is being described here:
-[http://doc.nuxeo.com/x/HwJu](http://doc.nuxeo.com/x/HwJu)
+This module requires installing a Drupal module that will call a specific Nuxeo module. It is highly recommended that you put a reverse-proxy between the 2 to simplify authentication.
 
-You can see here that it is used to get the title of a document from its ID in `nuxeo_content_field_formatter_view` of nuxeo_content.module.
 
-The formatter view also display a link to the small size of the picture, which requires the user to authenticate to Nuxeo (a proxy to dedicated user would be a better solution).
+## Drupal side
 
-**The search part of the module in edit mode is handled by a plugin that needs to be installed Nuxeo side:**
+As any Drupal module, you can just put all the files in the sites/all/modules folder of your Drupal installation and enabling the module ``Nuxeo Labs Content``
+It will create a new field type available for your different content types.
+
+## Nuxeo side
+
+**The search part of the module in edit mode is handled by another plugin that needs to be installed on Nuxeo server side:**
 
 [https://github.com/fvadon/nuxeo-simplesearchframe](https://github.com/fvadon/nuxeo-simplesearchframe)
 
-It is displayed in Drupal through an Iframe, and communication between the 2 parties is made trough post messages.
+It is displayed in Drupal through an Iframe, and communication between the 2 parties is made through post messages.
 
-## General logic of Drupal
+Nuxeo also offers a PHP client that is being described here:
+[http://doc.nuxeo.com/x/HwJu](http://doc.nuxeo.com/x/HwJu)
 
-This part aims at explaining a few hints of the Drupal logic. It does not replace exploring Drupal documentation but can be a starting point.
-Drupal custom dev are called modules. In Drupal you have several kind of objects called "nodes". IT can be blocks, menues, fields...
+It is not actually used in this module but the code is available and commented in it as an example. You can see here that it is used to get the title of a document from its ID in `nuxeo_content_field_formatter_view` of nuxeo_content.module.
+
+## Reverse-proxy
+
+The display of the iframes (edit) an the final picture (view) are made through a direct link to Nuxeo. So it means you need a way to authenticate to Nuxeo. 
+
+In the case of Drupal contents, you would probably want everyone to have the same access on Nuxeo to avoid referring to an Picture when editing that ends up not being seen by another user in view mode. The best solution to do that is to access to Nuxeo from Drupal via a dedicated reverse-proxy that will authenticate to Nuxeo with a specific user (by setting the header for instance). The reverse-proxy is also a good way to add some caching on the resources.
+
+
+## General logic of the Drupal Module
+
+This part aims at explaining how is implemented this module. 
+
+Drupal custom dev are called modules. In Drupal you have several kind of objects called "nodes". It can be blocks, menues, fields...
 
 A module is composed of a few files:
 
@@ -34,57 +50,51 @@ Here we want a new field type in articles so we can use [http://cgit.drupalcode.
 
 Drupal exposes "hooks". Hooks are like interface, you have to implement specific hooks to create a new bloc, a new field...
 
+Each hook should return specific information which is documented in the hook documentation (also references some implementation as examples).
+	
+Installation is just done by putting the files at the right place in the installation folder of Drupal and reload the module page (as it is just PHP) and then enabling the module.
+
+### New field
 For instance, providing a field requires (among other things):
 
 - Defining a field:
-	- hook_field_info()
-	- hook_field_schema()
-	- hook_field_validate()
-	- hook_field_is_empty()
+	- ``hook_field_info()``
+	- ``hook_field_schema()``
+	- ``hook_field_validate()``
+	- ``hook_field_is_empty()``
 - Defining a formatter for the field (the portion that outputs the field for display):
-	- hook_field_formatter_info()
-	- hook_field_formatter_view()
+	- ``hook_field_formatter_info()``
+	- ``hook_field_formatter_view()``
 - Defining a widget for the edit form:
-	- hook_field_widget_info()
-	- hook_field_widget_form()
-	
-Each hook should return specific information which can is documented in the hook documentation or can be guessed by looking at the examples.
-	
-Installation is just done by putting the files at the right place in the installation folder of Drupal and reload the module page (as it is just PHP).
+	- ``hook_field_widget_info()``
+	- ``hook_field_widget_form()``
 
-A custom widget element is also defined.
+### Field instance settings
 
+``nuxeo_content_field_info`` defines some instance_settings, they are set up thanks to the hook ``nuxeo_content_field_instance_settings_form()``
 
-## Installation and requires
+### Custom widget element
 
-## Installation
+Usually widgets uses standard Drupal elements like a textfield or a select box. In our case we needed a custom element to display the iframe and communicate with it. So a specific element has been declared, with its own specific theme:
 
-As any drupal module, you can just put all the files in the sites/all/modules folder of your drupal installation.
-It will create a new field type available for your different content types.
+- ``nuxeo_content_element_info()``
+- ``nuxeo_asset_theme()``
+- ``theme_nuxeo_asset_iframe_element()``
 
-### Nuxeo PHP Automation Client
-
-Nuxeo PHP Automation client files are included in the module, taken from:
-
-[https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient](https://github.com/nuxeo/nuxeo-automation-php-client/tree/master/NuxeoAutomationClient)
-
-
-### Nuxeo Simplesearchframe
-As described above, a plugin needs to be installed on the Nuxeo server.
 
 
 ## Troubleshooting.
 
-Here are a few hints for issues and question encountered during the implementation of this module
+Here are a few hints for issues and question encountered during the implementation of this module.
 
 ### Implementing new hooks
 
 In order for your new hooks to be loaded, you need to reload the module in the module page.
-Once it is done you can modify that hook and reload just by saving the file and reloading the current page in Drupal, but you need to the full module she you implement new hooks...
+Once it is done you can modify that hook and reload just by saving the file and reloading the current page in Drupal, but you need to reload the full module you implement new hooks...
 
 ### widget_form()
 
-The edit mode of the field is defined by the hook hook_field_widget_form() where Drupal tells us to create form elements for our field's widget. It means that it should return and element containing form properties. The list of available for properties can be found at:
+The edit mode of the field is defined by the hook hook_field_widget_form() where Drupal tells us to create form elements for our field's widget. It means that it should return an element containing form properties. The list of available for properties can be found at:
 
 [https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7](https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7)
 
@@ -92,6 +102,25 @@ For instance the type (checkbox, text filed...) is the first property to set up,
 
 ## hook_field_formatter view()
 As explained by the doc, it has to return a renderable array of items, more explanation at:
-
 [https://www.drupal.org/node/930760](https://www.drupal.org/node/930760)
+
+# License
+(C) Copyright 2015 Nuxeo SA (http://nuxeo.com/) and others.
+
+All rights reserved. This program and the accompanying materials
+are made available under the terms of the GNU Lesser General Public License
+(LGPL) version 2.1 which accompanies this distribution, and is available at
+http://www.gnu.org/licenses/lgpl-2.1.html
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
+
+Contributors:
+Frederic Vadon 
+
+# About Nuxeo
+
+Nuxeo provides a modular, extensible Java-based [open source software platform for enterprise content management](http://www.nuxeo.com) and packaged applications for Document Management, Digital Asset Management and Case Management. Designed by developers for developers, the Nuxeo platform offers a modern architecture, a powerful plug-in model and extensive packaging capabilities for building content applications.
 
