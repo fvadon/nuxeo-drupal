@@ -25,7 +25,9 @@ It is displayed in Drupal through an Iframe, and communication between the 2 par
 Nuxeo also offers a PHP client that is being described here:
 [http://doc.nuxeo.com/x/HwJu](http://doc.nuxeo.com/x/HwJu)
 
-It is not actually used in this module but the code is available and commented in it as an example. You can see here that it is used to get the title of a document from its ID in `nuxeo_content_field_formatter_view` of nuxeo_content.module.
+The Drupal client is used for updating Nuxeo external references trough this Nuxeo plugin: 
+[https://github.com/fvadon/nuxeo-external-reference
+](https://github.com/fvadon/nuxeo-external-reference)
 
 ## Reverse-proxy
 
@@ -82,6 +84,12 @@ Usually widgets uses standard Drupal elements like a textfield or a select box. 
 - ``theme_nuxeo_asset_iframe_element()``
 
 
+### Rules Action for referencing external content to Nuxeo
+The following plugin [https://github.com/fvadon/nuxeo-external-reference](https://github.com/fvadon/nuxeo-external-reference) enables Nuxeo to track what assets are used by external systems trough Rest Calls to Nuxeo when the content is updated or deleted.
+
+2 actions have been made available through the nuxeo_content_rules_action_info() to call that plugin
+
+To use it, it requires the Rules plugin in Drupal to be enabled ([https://www.drupal.org/project/rules](https://www.drupal.org/project/rules)).
 
 ## Troubleshooting.
 
