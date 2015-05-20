@@ -238,9 +238,10 @@ class NuxeoRequest {
                     $answer = json_decode($answer, true);
                     $documents = new NuxeoDocuments($answer);
                 }
+                return $documents;
             }
 
-            return $documents;
+            
         }
         else
             return $this->multiPart();

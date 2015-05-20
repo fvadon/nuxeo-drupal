@@ -40,9 +40,11 @@ function nuxeo_content_field_info() {
 					'description' => t ( 'The id of the asset the picture should be extracted from' ),
 					'default_widget' => 'nuxeo_content_widget',
 					'default_formatter' => 'nuxeo_content_formatter_text',
-					'instance_settings' => array('nuxeo_server_url' => 'http://localhost:8080/nuxeo/', 'nuxeo_pic_size' => 'Small'),
-					),
-			
+					'instance_settings' => array (
+							'nuxeo_server_url' => 'http://localhost:8080/nuxeo/',
+							'nuxeo_pic_size' => 'Small' 
+					) 
+			) 
 	);
 }
 
@@ -68,7 +70,7 @@ function nuxeo_content_field_validate($entity_type, $entity, $field, $instance, 
 						'message' => t ( 'Should be the Asset ID' ) 
 				);
 			}
-		}	
+		}
 	}
 }
 
@@ -123,18 +125,20 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 	switch ($display ['type']) {
 		// This formatter simply outputs the field as text for now
 		case 'nuxeo_content_formatter_text' :
-			$nuxeoServer = $instance['settings']['nuxeo_server_url'];
-			$nuxeo_pic_size = $instance['settings']['nuxeo_pic_size'];			
+			$nuxeoServer = $instance ['settings'] ['nuxeo_server_url'];
+			$nuxeo_pic_size = $instance ['settings'] ['nuxeo_pic_size'];
 			$pictureUrlExtension = 'nxpicsfile/default/';
 			$searchframeURL = 'site/searchframe';
 			$client = new NuxeoPhpAutomationClient ( $nuxeoServer . 'site/automation' );
 			// $session = $client->getSession ( 'Administrator','Administrator'); Here as an exemple when the use of the Rest Apis is needed.
 			foreach ( $items as $delta => $item ) {
 				// Call Nuxeo API Example
-				/*$answer = $session->newRequest ( "Document.Fetch" )->set ( 'params', 'value', $item ['assetid'] )->sendRequest ();
-				$document = $answer->getDocument ( 0 );
-				$value = sizeof ( $answer );
-				$docTitle = $document->getTitle ();	*/			
+				/*
+				 * $answer = $session->newRequest ( "Document.Fetch" )->set ( 'params', 'value', $item ['assetid'] )->sendRequest ();
+				 * $document = $answer->getDocument ( 0 );
+				 * $value = sizeof ( $answer );
+				 * $docTitle = $document->getTitle ();
+				 */
 				$element [$delta] = array (
 						/*array (
 								// We create a render array to produce the desired markup,
@@ -151,7 +155,7 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 								'#type' => 'html_tag',
 								'#tag' => 'img',
 								'#attributes' => array (
-										'src' => $nuxeoServer . $pictureUrlExtension . $item ['assetid'] . '/'.$nuxeo_pic_size.':content/', 
+										'src' => $nuxeoServer . $pictureUrlExtension . $item ['assetid'] . '/' . $nuxeo_pic_size . ':content/' 
 								) 
 						) 
 				);
@@ -194,11 +198,10 @@ function nuxeo_content_field_widget_info() {
  * https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7
  */
 function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-	$nuxeoServer = $instance['settings']['nuxeo_server_url'];
+	$nuxeoServer = $instance ['settings'] ['nuxeo_server_url'];
 	$pictureUrlExtension = 'nxpicsfile/default/';
 	$searchframeURL = 'site/searchframe';
 	$value = isset ( $items [$delta] ['assetid'] ) ? $items [$delta] ['assetid'] : '';
-	
 	$widget = $element;
 	$widget ['#delta'] = $delta;
 	
@@ -217,7 +220,7 @@ function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance
 			$widget += array (
 					'#type' => 'nuxeo_asset_iframe_element',
 					'#default_value' => $value,
-					'#nuxeo_server_url'=> $nuxeoServer,
+					'#nuxeo_server_url' => $nuxeoServer 
 			);
 			break;
 	}
@@ -232,15 +235,17 @@ function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance
  * Using http://nodesforbreakfast.com/article/2012/02/24/create-custom-form-api-elements-hookelementinfo-drupal-7 and
  * https://www.silviogutierrez.com/blog/custom-drupal-elements-forms/ as an example
  */
-function nuxeo_content_element_info(){
-	$types ['nuxeo_asset_iframe_element'] = array(
+function nuxeo_content_element_info() {
+	$types ['nuxeo_asset_iframe_element'] = array (
 			'#input' => TRUE,
 			'#autocomplete_path' => FALSE,
-			'#process' => array(
+			'#process' => array (
 					'ajax_process_form' 
 			),
 			'#theme' => 'nuxeo_asset_iframe_element',
-			'#theme_wrappers' => array('form_element'),
+			'#theme_wrappers' => array (
+					'form_element' 
+			) 
 	);
 	return $types;
 }
@@ -248,75 +253,156 @@ function nuxeo_content_element_info(){
 /**
  * Theme hook to declare our custom formatter for the custom element
  */
-
-function nuxeo_asset_theme() {
+function nuxeo_content_theme() {
 	return array (
-			'nuxeo_asset_iframe_element' => array(
-					'render element' => 'element',
-			) ,
+			'nuxeo_asset_iframe_element' => array (
+					'render element' => 'element' 
+			) 
 	);
 }
 
 /**
  * Format a nuxeo_asset_iframe_element
- * This theme function generates the actual HTML for the custom element 
+ * This theme function generates the actual HTML for the custom element
  * Inspired from theme_fieldtext()
  */
 function theme_nuxeo_asset_iframe_element($variables) {
-	$element = $variables['element'];
-	  $element['#attributes']['type'] = 'text';
-	  element_set_attributes($element, array('id', 'name', 'value', 'size', 'maxlength'));
-	  _form_set_class($element, array('form-text'));
-
-	  $extra = '';
-	  	$nuxeoServer = $element['#nuxeo_server_url'];
-		$searchframeURL = 'site/searchframe';
-		$elementminid=str_replace("-","",$element['#attributes']['id']);
-	  	$output = '<input' . drupal_attributes($element['#attributes']) . ' style="display: none;"/></br>'
-	  .'<iframe src="'.$nuxeoServer.$searchframeURL.'" width="800" height="300" id="'.$element['#attributes']['id'].'-iframe"><p>Your browser does not support iframes.</p></iframe><script>
+	$element = $variables ['element'];
+	$element ['#attributes'] ['type'] = 'text';
+	element_set_attributes ( $element, array (
+			'id',
+			'name',
+			'value',
+			'size',
+			'maxlength' 
+	) );
+	_form_set_class ( $element, array (
+			'form-text' 
+	) );
+	
+	$extra = '';
+	$nuxeoServer = $element ['#nuxeo_server_url'];
+	$searchframeURL = 'site/searchframe';
+	$elementminid = str_replace ( "-", "", $element ['#attributes'] ['id'] );
+	$output = '<input' . drupal_attributes ( $element ['#attributes'] ) . ' style="display: none;"/></br>' . '<iframe src="' . $nuxeoServer . $searchframeURL . '" width="800" height="300" id="' . $element ['#attributes'] ['id'] . '-iframe"><p>Your browser does not support iframes.</p></iframe><script>
 		window.addEventListener( "message",
           function (e) {
-			  if (e.origin+"/nuxeo/" == "'.$nuxeoServer.'" && e.data.parentId=="'.$elementminid.'"){
-				  document.getElementById("'.$element['#attributes']['id'].'").value = e.data.documentId;
+			  if (e.origin+"/nuxeo/" == "' . $nuxeoServer . '" && e.data.parentId=="' . $elementminid . '"){
+				  document.getElementById("' . $element ['#attributes'] ['id'] . '").value = e.data.documentId;
 			  }	
           });
-		  var nuxeoSearchFrame'.$elementminid.' = document.getElementById("'.$element['#attributes']['id'].'-iframe");
-		  var messageToSend'.$elementminid.' = {parentId:"'.$elementminid.'", message:"'.$element['#attributes']['value'].'"};
-		  nuxeoSearchFrame'.$elementminid.'.onload = function() {
-		  nuxeoSearchFrame'.$elementminid.'.contentWindow.postMessage(messageToSend'.$elementminid.',"*");
+		  var nuxeoSearchFrame' . $elementminid . ' = document.getElementById("' . $element ['#attributes'] ['id'] . '-iframe");
+		  var messageToSend' . $elementminid . ' = {parentId:"' . $elementminid . '", message:"' . $element ['#attributes'] ['value'] . '"};
+		  nuxeoSearchFrame' . $elementminid . '.onload = function() {
+		  nuxeoSearchFrame' . $elementminid . '.contentWindow.postMessage(messageToSend' . $elementminid . ',"*");
 		  }		  
     	  </script>';
 	return $output . $extra;
 }
 
-
-
 /**
  * Implements hook_field_instance_settings_form().
  */
 function nuxeo_content_field_instance_settings_form($field, $instance) {
-	$settings = $instance['settings'];
-		$form['nuxeo_server_url'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Nuxeo Server URL'),
-				'#default_value' => $instance['settings']['nuxeo_server_url'],
-				'#required' => TRUE,
-		);
-
-		$form['nuxeo_pic_size'] = array(
-				'#type' => 'select',
-				'#title' => t('Image Format'),
-				'#default_value' => $settings['nuxeo_pic_size'],
-				'#options' => array(
-						'Thumb' => t('Thumb'),
-						'Small' => t('Small'),
-						'Medium' => t('Medium'),
-				),
-				'#required' => TRUE,
-				'#description' => t('The size of the pic to display'),
-		);
+	$settings = $instance ['settings'];
+	$form ['nuxeo_server_url'] = array (
+			'#type' => 'textfield',
+			'#title' => t ( 'Nuxeo Server URL' ),
+			'#default_value' => $instance ['settings'] ['nuxeo_server_url'],
+			'#required' => TRUE 
+	);
 	
-
+	$form ['nuxeo_pic_size'] = array (
+			'#type' => 'select',
+			'#title' => t ( 'Image Format' ),
+			'#default_value' => $settings ['nuxeo_pic_size'],
+			'#options' => array (
+					'Thumb' => t ( 'Thumb' ),
+					'Small' => t ( 'Small' ),
+					'Medium' => t ( 'Medium' ) 
+			),
+			'#required' => TRUE,
+			'#description' => t ( 'The size of the pic to display' ) 
+	);
 	return $form;
 }
+
+/**
+ */
+function nuxeo_content_rules_action_info() {
+	$actions = array (
+			'nuxeo_content_actions_update_referenced_content' => array (
+					'label' => t ( "Notify Nuxeo server for content referenced" ),
+					'parameter' => array (
+							'node' => array (
+									'type' => 'node',
+									'label' => t ( 'Node to update' ),
+									'description' => t ( 'A node for which Nuxeo refs will be updated' ) 
+							) 
+					),
+					'group' => t ( 'Nuxeo' ) 
+			) ,
+			'nuxeo_content_actions_delete_referenced_content' => array (
+					'label' => t ( "Notify Nuxeo server for content deleted" ),
+					'parameter' => array (
+							'node' => array (
+									'type' => 'node',
+									'label' => t ( 'Node to update' ),
+									'description' => t ( 'A node for which Nuxeo refs will be deleted' )
+							)
+					),
+					'group' => t ( 'Nuxeo' )
+			)
+			
+	);
+	return $actions;
+}
+
+/**
+ */
+function nuxeo_content_actions_update_referenced_content($node) {
+	$currentNodeRef = url ( 'node/' . $node->nid, array (
+			'absolute' => True,
+			'alias' => True 
+	) );
+	// We don't know how many assetIDs and what name they have, so we have to look for it
+	// The only info is that the type ie assetid.
 	
+	$node_vars = get_object_vars ( $node );
+	$asset_ids = array ();
+	foreach ( $node_vars as $node_var ) {
+		if (is_array ( $node_var )) {
+			if (count ( $node_var ) > 0 and array_key_exists ( 'und', $node_var )) {
+				if (count ( $node_var ['und'] ) > 0) {
+					if (array_key_exists ( 'assetid', $node_var ['und'] [0] )) {
+						foreach ( $node_var ['und'] as $assetIdElement )
+							$asset_ids [] = $assetIdElement ['assetid'];
+					}
+				}
+			}
+		}
+	}
+	//Should not be hardcoded.
+	$client = new NuxeoPhpAutomationClient ( 'http://localhost:8080/nuxeo/site/automation' );
+	$session = $client->getSession ( 'Administrator', 'Administrator' );
+	$session->newRequest ( "RemoveExternalReference" )->set ( 'params', 'ExternalReference', $currentNodeRef )->sendRequest ();
+	foreach ( $asset_ids as $asset_id ) {
+		$session->newRequest( "AddExternalReference" )->set('params', 'ExternalReference', $currentNodeRef )->set( 'params', 'DocumentUID', $asset_id)->set ( 'params', 'referenceLabel', $node->title )->set( 'params', 'externalSource', 'Drupal' )->sendRequest ();
+	}
+}
+
+/**
+ */
+function nuxeo_content_actions_delete_referenced_content($node) {
+	$currentNodeRef = url ( 'node/' . $node->nid, array (
+			'absolute' => True,
+			'alias' => True
+	) );
+
+	//Should not be hardcoded.
+	$client = new NuxeoPhpAutomationClient ( 'http://localhost:8080/nuxeo/site/automation' );
+	$session = $client->getSession ( 'Administrator', 'Administrator' );
+	$session->newRequest ( "RemoveExternalReference" )->set ( 'params', 'ExternalReference', $currentNodeRef )->sendRequest ();
+
+}
+
