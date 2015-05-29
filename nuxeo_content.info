@@ -1,3 +1,4 @@
 name = Nuxeo Labs Content
 description = How to integrate Nuxeo content into Drupal
 core = 7.x
+configure = admin/config/content/nuxeo_content

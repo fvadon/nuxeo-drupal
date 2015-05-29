@@ -28,6 +28,58 @@ function nuxeo_content_help($path, $arg) {
 }
 
 /**
+ * Hook-menu Admin function to declare module settings.
+ */
+function nuxeo_content_menu() {
+
+	$items = array();
+
+	$items['admin/config/content/nuxeo_content'] = array(
+			'title' => 'Nuxeo content module settings',
+			'description' => 'Description of your Nuxeo Content settings page',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('nuxeo_content_admin'),
+			'access arguments' => array('access administration pages'),
+			'type' => MENU_NORMAL_ITEM,
+	);
+
+	return $items;
+}
+
+/**
+ * Page callback nuxeo content settings
+ * @see nuxeo_content_menu()
+ */
+function nuxeo_content_admin() {
+	$form = array();
+
+	$form['nuxeo_content_server_url_setting'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Nuxeo server URL'),
+			'#default_value' => variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/"),
+			'#size' => 40,
+			'#description' => t("URL of the Nuxeo server to query for all the API calls."),
+			'#required' => TRUE,
+	);
+	$form['nuxeo_content_user_setting'] = array(
+			'#type' => 'textfield',
+			'#title' => t('nuxeo_content_user_setting'),
+			'#default_value' => variable_get('nuxeo_content_user_setting', "Administrator"),
+			'#size' => 20,
+			'#description' => t("User used for Nuxeo notification when Actions are used. It is recommended to use a reverse-proxy with header authentication instead"),
+	);
+	$form['nuxeo_content_pwd_setting'] = array(
+			'#type' => 'password',
+			'#title' => t('nuxeo_content_pwd_setting'),
+			'#default_value' => variable_get('nuxeo_content_pwd_setting', "Administrator"),
+			'#size' => 20,
+			'#description' => t("PWD for User"),
+	);
+
+	return system_settings_form($form);
+}
+
+/**
  * Implements hook_field_info().
  *
  * Provides the description of the field.
@@ -41,7 +93,6 @@ function nuxeo_content_field_info() {
 					'default_widget' => 'nuxeo_content_widget',
 					'default_formatter' => 'nuxeo_content_formatter_text',
 					'instance_settings' => array (
-							'nuxeo_server_url' => 'http://localhost:8080/nuxeo/',
 							'nuxeo_pic_size' => 'Small' 
 					) 
 			) 
@@ -125,11 +176,11 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 	switch ($display ['type']) {
 		// This formatter simply outputs the field as text for now
 		case 'nuxeo_content_formatter_text' :
-			$nuxeoServer = $instance ['settings'] ['nuxeo_server_url'];
+			$nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/");
 			$nuxeo_pic_size = $instance ['settings'] ['nuxeo_pic_size'];
 			$pictureUrlExtension = 'nxpicsfile/default/';
 			$searchframeURL = 'site/searchframe';
-			$client = new NuxeoPhpAutomationClient ( $nuxeoServer . 'site/automation' );
+			// $client = new NuxeoPhpAutomationClient ( $nuxeoServer . 'site/automation' );
 			// $session = $client->getSession ( 'Administrator','Administrator'); Here as an exemple when the use of the Rest Apis is needed.
 			foreach ( $items as $delta => $item ) {
 				// Call Nuxeo API Example
@@ -198,7 +249,7 @@ function nuxeo_content_field_widget_info() {
  * https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7
  */
 function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-	$nuxeoServer = $instance ['settings'] ['nuxeo_server_url'];
+	$nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/");
 	$pictureUrlExtension = 'nxpicsfile/default/';
 	$searchframeURL = 'site/searchframe';
 	$value = isset ( $items [$delta] ['assetid'] ) ? $items [$delta] ['assetid'] : '';
@@ -281,7 +332,7 @@ function theme_nuxeo_asset_iframe_element($variables) {
 	) );
 	
 	$extra = '';
-	$nuxeoServer = $element ['#nuxeo_server_url'];
+	$nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/");
 	$searchframeURL = 'site/searchframe';
 	$elementminid = str_replace ( "-", "", $element ['#attributes'] ['id'] );
 	$output = '<input' . drupal_attributes ( $element ['#attributes'] ) . ' style="display: none;"/></br>' . '<iframe src="' . $nuxeoServer . $searchframeURL . '" width="800" height="300" id="' . $element ['#attributes'] ['id'] . '-iframe"><p>Your browser does not support iframes.</p></iframe><script>
@@ -305,12 +356,6 @@ function theme_nuxeo_asset_iframe_element($variables) {
  */
 function nuxeo_content_field_instance_settings_form($field, $instance) {
 	$settings = $instance ['settings'];
-	$form ['nuxeo_server_url'] = array (
-			'#type' => 'textfield',
-			'#title' => t ( 'Nuxeo Server URL' ),
-			'#default_value' => $instance ['settings'] ['nuxeo_server_url'],
-			'#required' => TRUE 
-	);
 	
 	$form ['nuxeo_pic_size'] = array (
 			'#type' => 'select',
@@ -328,6 +373,7 @@ function nuxeo_content_field_instance_settings_form($field, $instance) {
 }
 
 /**
+ * Declaring 2 new actions to notify the server of content references modifications.
  */
 function nuxeo_content_rules_action_info() {
 	$actions = array (
@@ -383,12 +429,13 @@ function nuxeo_content_actions_update_referenced_content($node) {
 		}
 	}
 	//Should not be hardcoded.
-	$client = new NuxeoPhpAutomationClient ( 'http://localhost:8080/nuxeo/site/automation' );
-	$session = $client->getSession ( 'Administrator', 'Administrator' );
+	$client = new NuxeoPhpAutomationClient ($nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/") . 'site/automation' );
+	$session = $client->getSession ( variable_get('nuxeo_content_user_setting', "Administrator"), variable_get('nuxeo_content_pwd_setting', "Administrator") );
 	$session->newRequest ( "RemoveExternalReference" )->set ( 'params', 'ExternalReference', $currentNodeRef )->sendRequest ();
 	foreach ( $asset_ids as $asset_id ) {
 		$session->newRequest( "AddExternalReference" )->set('params', 'ExternalReference', $currentNodeRef )->set( 'params', 'DocumentUID', $asset_id)->set ( 'params', 'referenceLabel', $node->title )->set( 'params', 'externalSource', 'Drupal' )->sendRequest ();
 	}
+	drupal_set_message("Nuxeo server notifed about: $node->title.");
 }
 
 /**
@@ -400,8 +447,8 @@ function nuxeo_content_actions_delete_referenced_content($node) {
 	) );
 
 	//Should not be hardcoded.
-	$client = new NuxeoPhpAutomationClient ( 'http://localhost:8080/nuxeo/site/automation' );
-	$session = $client->getSession ( 'Administrator', 'Administrator' );
+	$client = new NuxeoPhpAutomationClient ( $nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/") . 'site/automation'  );
+	$session = $client->getSession ( variable_get('nuxeo_content_user_setting', "Administrator"), variable_get('nuxeo_content_pwd_setting', "Administrator")  );
 	$session->newRequest ( "RemoveExternalReference" )->set ( 'params', 'ExternalReference', $currentNodeRef )->sendRequest ();
 
 }
