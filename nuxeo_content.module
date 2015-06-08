@@ -70,10 +70,24 @@ function nuxeo_content_admin() {
 	);
 	$form['nuxeo_content_pwd_setting'] = array(
 			'#type' => 'password',
-			'#title' => t('nuxeo_content_pwd_setting'),
+			'#title' => t('Password'),
 			'#default_value' => variable_get('nuxeo_content_pwd_setting', "Administrator"),
 			'#size' => 20,
 			'#description' => t("PWD for User"),
+	);
+	
+	$form['nuxeo_content_server_display'] = array(
+			'#type' => 'select',
+			'#title' => t('Content picker display'),
+			'#options' => array(
+			          "site/searchframe/select2screen" => t('Select 2 (recommended)'),
+			         "site/searchframe/searchscreen" => t('Dynamic search screen'),
+			       ),
+	        '#default_value' => variable_get('nuxeo_content_server_display', "site/searchframe/select2screen"),
+			'#size' => 2,
+			'#description' => t("Select how the Nuxeo server will display the content picker."),
+			'#required' => TRUE,
+
 	);
 
 	return system_settings_form($form);
@@ -179,7 +193,7 @@ function nuxeo_content_field_formatter_view($entity_type, $entity, $field, $inst
 			$nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/");
 			$nuxeo_pic_size = $instance ['settings'] ['nuxeo_pic_size'];
 			$pictureUrlExtension = 'nxpicsfile/default/';
-			$searchframeURL = 'site/searchframe';
+			$searchframeURL = variable_get('nuxeo_content_server_display', "site/searchframe/select2screen");
 			// $client = new NuxeoPhpAutomationClient ( $nuxeoServer . 'site/automation' );
 			// $session = $client->getSession ( 'Administrator','Administrator'); Here as an exemple when the use of the Rest Apis is needed.
 			foreach ( $items as $delta => $item ) {
@@ -251,7 +265,7 @@ function nuxeo_content_field_widget_info() {
 function nuxeo_content_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
 	$nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/");
 	$pictureUrlExtension = 'nxpicsfile/default/';
-	$searchframeURL = 'site/searchframe';
+	$searchframeURL = variable_get('nuxeo_content_server_display', "site/searchframe/select2screen");
 	$value = isset ( $items [$delta] ['assetid'] ) ? $items [$delta] ['assetid'] : '';
 	$widget = $element;
 	$widget ['#delta'] = $delta;
@@ -333,7 +347,7 @@ function theme_nuxeo_asset_iframe_element($variables) {
 	
 	$extra = '';
 	$nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/");
-	$searchframeURL = 'site/searchframe';
+	$searchframeURL = variable_get('nuxeo_content_server_display', "site/searchframe/select2screen");
 	$elementminid = str_replace ( "-", "", $element ['#attributes'] ['id'] );
 	$output = '<input' . drupal_attributes ( $element ['#attributes'] ) . ' style="display: none;"/></br>' . '<iframe src="' . $nuxeoServer . $searchframeURL . '" width="800" height="300" id="' . $element ['#attributes'] ['id'] . '-iframe"><p>Your browser does not support iframes.</p></iframe><script>
 		window.addEventListener( "message",
@@ -446,7 +460,6 @@ function nuxeo_content_actions_delete_referenced_content($node) {
 			'alias' => True
 	) );
 
-	//Should not be hardcoded.
 	$client = new NuxeoPhpAutomationClient ( $nuxeoServer = variable_get('nuxeo_content_server_url_setting', "http://localhost:8080/nuxeo/") . 'site/automation'  );
 	$session = $client->getSession ( variable_get('nuxeo_content_user_setting', "Administrator"), variable_get('nuxeo_content_pwd_setting', "Administrator")  );
 	$session->newRequest ( "RemoveExternalReference" )->set ( 'params', 'ExternalReference', $currentNodeRef )->sendRequest ();
